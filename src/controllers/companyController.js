@@ -1,33 +1,21 @@
 const { Company } = require('../database')
-const { requireAuth } = require('../util/auth.js')
 
-const requireAuth = async (request, response, next) => {
+exports.get = async (request, response) => {
   try {
-    if (!request.user) {
-      throw new Unauthorized('Token inválido');
-    }
-    next();
-  } catch (error) {
-    return response.status(401).json({ message: 'Não autorizado' });
-  }
-};
+    const params = request?.query ?? {};
 
-exports.get = ('/', async (request, response) => {
-  const params = request?.query ?? {};
-
-  try {
     const companys = await Company.find({...params, deletedAt: null });
 
     response.status(200).json({ companys });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar as empresas' });
   }
-});
+};
 
-exports.getById = ('/:_id', async (request, response) => {
-  const { _id } = request.params;
-
+exports.getById = async (request, response) => {
   try {
+    const { _id } = request.params;
+
     const company = await Company.findOne({ _id, deletedAt: null });
 
     if (!company) {
@@ -38,41 +26,40 @@ exports.getById = ('/:_id', async (request, response) => {
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar uma empresa' });
   }
-});
+};
 
-
-exports.post = ('/', requireAuth, async (request, response) => {
-  const company = request.body;
-
+exports.post = async (request, response) => {
   try {
-    const newCompany = new Company(company);
+    const company = request.body;
+
+    const newCompany = new Company({...company, createdAt: new Date(), updatedAt: new Date()});
     await newCompany.save();
 
     response.status(201).json({ message: 'Empresa criada com sucesso', company: newCompany });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao criar a empresa' });
   }
-});
+};
 
-exports.put = ('/:_id', requireAuth, async (request, response) => {
-  const { _id } = request.params;
-
+exports.put =  async (request, response) => {
   try {
+    const { _id } = request.params;
+
     const company = await Company.findOne({ _id, deletedAt: null });
 
     if (!company) {
       return response.status(404).json({ message: 'Empresa não encontrada' });
     }
-    company = {...company, ...request.company};
+    company = {...company, ...request.company,  updatedAt: new Date()};
     await company.save();
 
     response.status(200).json({ message: 'Empresa atualizada com sucesso' });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar a Empresa' });
   }
-});
+};
 
-exports.delete = ('/:_id', requireAuth, async (request, response) => {
+exports.delete =  async (request, response) => {
   const { _id } = request.params
   try {
     const company = await Company.findOne({ _id, deletedAt: null });
@@ -88,5 +75,5 @@ exports.delete = ('/:_id', requireAuth, async (request, response) => {
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir a empresa' });
   }
-})
+}
 

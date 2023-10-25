@@ -94,14 +94,14 @@
     const User           = mongoose.model('user', schemas.user)
     const Token          = mongoose.model('token', schemas.token)
     const Company        = mongoose.model('company', schemas.company)
-    const Appointments   = mongoose.model('appointments', schemas.appointments)
+    const Appointment   = mongoose.model('appointments', schemas.appointments)
     const Availability   = mongoose.model('availability', schemas.availability)
     const Notification   = mongoose.model('notification', schemas.notification)
     const Feedback       = mongoose.model('feedback', schemas.feedback)
     const Service        = mongoose.model('service', schemas.service)
 
     module.exports       = {
-    ObjectId: mongoose.Types.ObjectId, User, Token, Company, Appointments, Availability, Feedback, Notification, Service,
+    ObjectId: mongoose.Types.ObjectId, User, Token, Company, Appointment, Availability, Feedback, Notification, Service,
     init() {
         return new Promise((resolve, reject) => {
         const options = {

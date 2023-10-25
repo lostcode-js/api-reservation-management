@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/userController')
+const controller = require('../controllers/appointmentController')
 const { requireAuth } = require('../utils/auth.js')
 
 router.get('/', requireAuth, controller.get);
