@@ -4,16 +4,15 @@ require('dotenv').config()
 
 const getTransport = () => {
     return nodemailer.createTransport({
-        host: process.env.SES_HOST,
-        port: process.env.SES_PORT,
-        secure: false, 
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT,
+        secure: false,
         auth: {
-            user: process.env.SES_USER,
-            pass: process.env.SES_PASSWORD,
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASSWORD,
         },
     })
 }
-
 const recoveryEmail = (email, token, request) => {
     const url = `https://${request.headers.host}/password/${token}`
 
@@ -38,7 +37,7 @@ const recoveryEmail = (email, token, request) => {
 
 const verificationEmail = (email, token, request) => {
     const url = `https://${request.headers.host}/confirm/${token}`
-    
+
     const message = {
         from: '"Drip Br" <noreply@dripbr.pt>',
         to: email,
@@ -61,13 +60,13 @@ const verificationEmail = (email, token, request) => {
 const sendJWTToken = async (email, messageBuilder, request) => {
     const token = jwt.sign(
         {
-        email: email
+            email: email
         },
         process.env.JWT_SECRET,
         {
-        expiresIn: '1d'
-    })
-    
+            expiresIn: '1d'
+        })
+
     const message = messageBuilder(email, token, request)
 
     let transporter = getTransport()
@@ -75,23 +74,23 @@ const sendJWTToken = async (email, messageBuilder, request) => {
 }
 
 const sendRecovery = (request, email) => {
-  return sendJWTToken(email, recoveryEmail, request)
+    return sendJWTToken(email, recoveryEmail, request)
 }
 
 const sendVerification = (request, email) => {
-  return sendJWTToken(email, verificationEmail, request)
+    return sendJWTToken(email, verificationEmail, request)
 }
 
 const verifyEmail = token => {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET)
-  }
-  catch (e) {
-    return null
-  }
+    try {
+        return jwt.verify(token, process.env.JWT_SECRET)
+    }
+    catch (e) {
+        return null
+    }
 }
 
 module.exports = {
-    sendVerification, verifyEmail, 
+    sendVerification, verifyEmail,
     sendRecovery
 }
