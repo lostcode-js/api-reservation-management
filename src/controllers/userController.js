@@ -2,12 +2,13 @@ const { User } = require('../database')
 
 exports.get =  async (request, response) => {
   try {
-    const params = request?.query ?? {};
+    const params = request.query ?? {};
 
     const users = await User.find({...params, deletedAt: null });
 
     response.status(200).json({ users });
   } catch (error) {
+    console.log(error)
     response.status(500).json({ message: 'Ocorreu um erro ao buscar os usuários' });
   }
 };
@@ -33,10 +34,10 @@ exports.post = async (request, response) => {
   try {
     const user = request.body;
 
-    const newUser = new User({...user, createAt: new Date(), updatedAt: new Date()});
+    const newUser = new User({...user, createdAt: new Date(), updatedAt: new Date()});
     await newUser.save();
 
-    response.status(201).json({ message: 'Usuário criado com sucesso', user: newUser });
+    response.status(201).json({ message: 'Usuário criado com sucesso', user: newUser, user });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao criar o usuário' });
   }

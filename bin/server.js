@@ -1,20 +1,15 @@
 const app = require('../src/app');
+const { initDatabase }       = require('../src/database')
+require('dotenv').config()
 
-const port = normalizaPort(process.env.PORT || '8000');
+const port = process.env.APP_PORT ?? '8000';
 
-function normalizaPort(val) {
-    const port = parseInt(val, 10);
-    if (isNaN(port)) {
-        return val;
-    }
-
-    if (port >= 0) {
-        return port;
-    }
-
-    return false;
-}
-
-app.listen(port, function () {
-    console.log(`app listening on port ${port}`)
-})
+Promise.resolve()
+.then(initDatabase)
+.then(() => new Promise((resolve, reject) => {
+  const server = require('http').createServer(app).listen(port, err =>
+    err ? reject(err) : resolve(server)
+  )
+}))
+.then(() => console.log('Servidor iniciado com sucesso!', `porta: ${port}`))
+.catch((error) => console.error("Erro ao iniciar servidor", error))
