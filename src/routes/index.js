@@ -19,11 +19,16 @@ router.use(async (request, response, next) => {
     } catch (error) {
         response.status(500).json({ message: 'Ocorreu um erro ao validar token de autenticação...' });
     }
-
 })
 
 //Rotas
 router.use('/', require('./authRoute'));
 router.use('/user', require('./userRoute'));
+router.use('/service', require('./serviceRoute'));
+router.use('/notification', require('./notificationRoute'));
+router.use('/feedback', require('./feedbackRoute'));
+router.use('/company', require('./companyRoute'));
+router.use('/availability', require('./availabilityRoute'));
+router.use('/appointment', require('./appointmentRoute'));
 
 module.exports = router;
