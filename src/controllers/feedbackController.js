@@ -1,4 +1,5 @@
 const { Feedback } = require('../database')
+const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get = async (request, response) => {
   try {
@@ -30,15 +31,14 @@ exports.getById = async (request, response) => {
 
 
 exports.post = async (request, response) => {
-
   try {
     const feedback = request.body;
-    const user = request.user;
+    const value = getDefaultDataWhenCreate(request);
 
     const newFeedback = new Feedback({
-      ...feedback, createdAt: new Date(),
-      updatedAt: new Date(), user: ObjectId(user._id)
+      ...feedback, ...value
     });
+
     await newFeedback.save();
 
     response.status(201).json({ message: 'Feedback criado com sucesso', feedback: newFeedback });
@@ -48,17 +48,20 @@ exports.post = async (request, response) => {
 };
 
 exports.put = async (request, response) => {
-  const { _id } = request.params;
-
   try {
-    const feedback = await Feedback.findOne({ _id, deletedAt: null });
+    const { _id } = request.params;
+    let feedback = await Feedback.findOne({ _id, deletedAt: null });
 
     if (!feedback) {
       return response.status(404).json({ message: 'Feedback não encontrado' });
     }
-    feedback = {
-      ...feedback, ...request.feedback, updatedAt: new Date(),
-    };
+
+    const value = getDefaultDataWhenUpdate(request);
+    const params = request.body;
+
+    feedback = new Feedback({
+      ...feedback, ...params, ...value
+    });
     await feedback.save();
 
     response.status(200).json({ message: 'Feedback atualizado com sucesso' });
@@ -68,15 +71,17 @@ exports.put = async (request, response) => {
 };
 
 exports.delete = async (request, response) => {
-  const { _id } = request.params
   try {
-    const feedback = await Feedback.findOne({ _id, deletedAt: null });
+    const { _id } = request.params
+    const value = getDefaultDataWhenDelete(request);
+
+    let feedback = await Feedback.findOne({ _id, deletedAt: null });
 
     if (!feedback) {
       return response.status(404).json({ message: 'Feedback não encontrado' });
     }
 
-    feedback.deletedAt = new Date();
+    feedback = new Feedback({ ...feedback, ...value});
     await feedback.save();
 
     return response.status(204).send();

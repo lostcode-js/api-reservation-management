@@ -4,6 +4,15 @@ const mongoose = require('mongoose')
 const { Schema } = mongoose
 const { ObjectId } = Schema.Types
 
+const defaultColumns = {
+    createdAt: Date,
+    updatedAt: Date,
+    deletedAt: Date,
+    createdBy: { type: ObjectId, ref: 'user' },
+    updatedBy: { type: ObjectId, ref: 'user' },
+    deletedBy: { type: ObjectId, ref: 'user' }
+}
+
 const schemas = {
     token: new Schema({
         user: { type: ObjectId, ref: 'user' },
@@ -12,9 +21,7 @@ const schemas = {
         active: Boolean,
         navigator: String,
         lastActivity: Date,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date,
+        ...defaultColumns
     }),
     company: new Schema({
         name: String,
@@ -22,9 +29,7 @@ const schemas = {
         phone: String,
         about: String,
         picture: String,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date,
+        ...defaultColumns
     }),
     user: new Schema({
         employer: { type: ObjectId, ref: 'company' },
@@ -34,61 +39,54 @@ const schemas = {
         about: String,
         picture: String,
         password: String,
-        type: String,
+        type: {
+            type: String,
+            enum : ['user','admin','employee'],
+            default: 'user' 
+        },
         services: [{ type: ObjectId, ref: 'service' }],
-        verifiedAt: Boolean,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date,
+        verifiedAt: Date,
+        ...defaultColumns
     }),
     appointments: new Schema({
         employee: { type: ObjectId, ref: 'user' },
-        generator: { type: ObjectId, ref: 'user' },
         customer: { type: ObjectId, ref: 'user' },
         date: Date,
         startTime: Date,
         endTime: Date,
-        type: String,
         services: [{ type: ObjectId, ref: 'service' }],
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date
+        ...defaultColumns
     }),
     availability: new Schema({
+        company: { type: ObjectId, ref: 'company' },
         employee: { type: ObjectId, ref: 'user' },
-        generator: { type: ObjectId, ref: 'user' },
         date: Date,
         dayOfWeek: Number,
         startTime: Date,
         endTime: Date,
-        type: String,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date
+        type: {
+            type: String,
+            enum : ['available','unavailable'],
+            default: 'available' 
+        },
+        ...defaultColumns
     }),
     notification: new Schema({
         user: { type: ObjectId, ref: 'user' },
-        generator: { type: ObjectId, ref: 'user' },
         message: String,
         readAt: Date,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date,
+        ...defaultColumns
     }),
     feedback: new Schema({
-        user: { type: ObjectId, ref: 'user' },
         note: Number,
         message: String,
         readAt: Date,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date,
+        ...defaultColumns
     }),
     service: new Schema({
         description: String,
-        createdAt: Date,
-        updatedAt: Date,
-        deletedAt: Date,
+        price: Number,
+        ...defaultColumns
     }),
 }
 

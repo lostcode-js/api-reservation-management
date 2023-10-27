@@ -1,4 +1,5 @@
 const { Appointment, ObjectId } = require('../database')
+const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get =  async (request, response) => {
   try {
@@ -29,10 +30,9 @@ exports.getById = async (request, response) => {
 exports.post = async (request, response) => {
   try {
     const appointment = request.body;
-    const user = request.user;
-    const newAppointment = new Appointment({...appointment, createdAt: new Date(),
-    updatedAt: new Date(),
-    generator: ObjectId(user._id)});
+    const value = getDefaultDataWhenCreate(request);
+
+    const newAppointment = new Appointment({...appointment, ...value});
     await newAppointment.save();
 
     response.status(201).json({ message: 'Reserva criada com sucesso', appointment: newAppointment });
@@ -44,12 +44,16 @@ exports.post = async (request, response) => {
 exports.put = async (request, response) => {
   try {
     const { _id } = request.params;
-    const appointment = await Appointment.findOne({ _id, deletedAt: null });
+    let appointment = await Appointment.findOne({ _id, deletedAt: null });
 
     if (!appointment) {
       return response.status(404).json({ message: 'Reserva não encontrada' });
     }
-    appointment = {...appointment, ...request.appointment, updatedAt: new Date()};
+
+    const value = getDefaultDataWhenUpdate(request);
+    const params = request.body;
+
+    appointment = new Appointment({...appointment, ...params, ...value});
     await appointment.save();
 
     response.status(200).json({ message: 'Reserva atualizada com sucesso' });
@@ -66,8 +70,9 @@ exports.delete = async (request, response) => {
     if (!appointment) {
       return response.status(404).json({ message: 'Reserva não encontrada' });
     }
+    const value = getDefaultDataWhenDelete(request);
 
-    appointment.deletedAt = new Date();
+    appointment = new Appointment({ ...appointment, ...value});
     await appointment.save();
 
     return response.status(204).send();

@@ -1,6 +1,6 @@
 const { User, Token } = require('../database')
-const { sha256, generateRandomString } = require('../util/util.js')
-const {sendVerification, verifyEmail, sendRecovery} = require('../util/email.js')
+const { sha256, generateRandomString } = require('../utils/auth.js')
+const {sendVerification, verifyEmail, sendRecovery} = require('../utils/email.js')
 
 exports.login = async (request, response) => {
   try {
@@ -48,7 +48,6 @@ exports.signup = async (request, response) => {
       email: email?.trim(),
       password: sha256(password),
       about: '',
-      isVerified: false,
       createdAt: new Date(),
     });
 
@@ -93,7 +92,7 @@ exports.verify =  async (request, response) => {
     const info = verifyEmail(token);
 
     if (info) {
-      await User.updateOne({ email: info.email }, { $set: { isVerified: true } });
+      await User.updateOne({ email: info.email }, { $set: { verifiedAt: new Date() } });
       response.status(200).json({ message: 'Email verificado com sucesso' });
     } 
 
@@ -106,7 +105,7 @@ exports.verify =  async (request, response) => {
 exports.recoveryPassword = async (request, response) => {
   try {
     const { email } = request.params;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, deletedAt: null });
 
     if (!user) {
       throw new Error('Conta não existe');
@@ -130,6 +129,10 @@ exports.changePassword = async (request, response) => {
       }
 
       request.user.password = sha256(password);
+
+      request.user.updateAt = new Date();
+      request.user.updatedBy = request.user._id;
+
       await request.user.save();
 
       response.status(200).json({ message: 'Senha alterada com sucesso' });
@@ -140,7 +143,9 @@ exports.changePassword = async (request, response) => {
         throw new Error('Token inválido ou expirado');
       }
 
-      await User.updateOne({ email: info.email }, { $set: { isVerified: true, password: sha256(password) } });
+      const existingUser = await User.findOne({ email: info.email });
+
+      await User.updateOne({ email: info.email }, { $set: { verifiedAt: new Date(), password: sha256(password), updatedAt: new Date(), updatedBy: existingUser._id   } });
       response.status(200).json({ message: 'Senha alterada com sucesso' });
     }
   } catch (error) {

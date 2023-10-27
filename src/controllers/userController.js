@@ -1,4 +1,5 @@
 const { User } = require('../database')
+const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get =  async (request, response) => {
   try {
@@ -29,12 +30,12 @@ exports.getById = async (request, response) => {
   }
 };
 
-
 exports.post = async (request, response) => {
   try {
+    const value = getDefaultDataWhenCreate(request);
     const user = request.body;
 
-    const newUser = new User({...user, createdAt: new Date(), updatedAt: new Date()});
+    const newUser = new User({...user, ...value});
     await newUser.save();
 
     response.status(201).json({ message: 'Usuário criado com sucesso', user: newUser, user });
@@ -46,12 +47,16 @@ exports.post = async (request, response) => {
 exports.put = async (request, response) => {
   try {
     const { _id } = request.params;
-    const user = await User.findOne({ _id, deletedAt: null });
+    let user = await User.findOne({ _id, deletedAt: null });
 
     if (!user) {
       return response.status(404).json({ message: 'Usuário não encontrado' });
     }
-    user = {...user, ...request.user, updatedAt: new Date()};
+
+    const value = getDefaultDataWhenUpdate(request);
+    const params = request.body;
+
+    user = new User({...user, ...params, ...value});
     await user.save();
 
     response.status(200).json({ message: 'Usuário atualizado com sucesso' });
@@ -61,15 +66,17 @@ exports.put = async (request, response) => {
 };
 
 exports.delete = async (request, response) => {
-  const { _id } = request.params
   try {
-    const user = await User.findOne({ _id, deletedAt: null });
+    const { _id } = request.params
+    const value = getDefaultDataWhenDelete(request);
+  
+    let user = await User.findOne({ _id, deletedAt: null });
 
     if (!user) {
       return response.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    user.deletedAt = new Date();
+    user = new User({ ...user, ...value});
     await user.save();
 
     return response.status(204).send();

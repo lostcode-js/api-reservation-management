@@ -1,8 +1,9 @@
 const { Notification, ObjectId } = require('../database')
+const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get =  async (request, response) => {
-  const params = request?.query ?? {};
   try {
+    const params = request?.query ?? {};
     const notifications = await Notification.find({...params, deletedAt: null });
 
     response.status(200).json({ notifications });
@@ -12,9 +13,8 @@ exports.get =  async (request, response) => {
 };
 
 exports.getById = async (request, response) => {
-  const { _id } = request.params;
-
   try {
+    const { _id } = request.params;
     const notification = await Notification.findOne({ _id, deletedAt: null });
 
     if (!notification) {
@@ -29,13 +29,11 @@ exports.getById = async (request, response) => {
 
 exports.post = async (request, response) => {
   try {
+    const value = getDefaultDataWhenCreate(request);
     const notification = request.body;
-    const user = request.user;
 
     const newNotification = new Notification({...notification,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    generator: ObjectId(user._id)});
+    ...value});
     await newNotification.save();
 
     response.status(201).json({ message: 'Notificação criad com sucesso', notification: newNotification });
@@ -52,7 +50,11 @@ exports.put = async (request, response) => {
     if (!notification) {
       return response.status(404).json({ message: 'Notificação não encontrada' });
     }
-    notification = {...notification, ...request.notification, updatedAt: new Date()};
+
+    const value = getDefaultDataWhenUpdate(request);
+    const params = request.body;
+
+    notification = new Notification({...notification, ...params, ...value});
     await notification.save();
 
     response.status(200).json({ message: 'Notificação atualizada com sucesso' });
@@ -64,14 +66,14 @@ exports.put = async (request, response) => {
 exports.delete = async (request, response) => {
   try {
     const { _id } = request.params
-    const notification = await Notification.findOne({ _id, deletedAt: null });
+    let notification = await Notification.findOne({ _id, deletedAt: null });
+    const value = getDefaultDataWhenDelete(request);
 
     if (!notification) {
       return response.status(404).json({ message: 'Notificação não encontrada' });
     }
 
-    notification.deletedAt = new Date();
-    notification.updatedAt = new Date();
+    notification =  new Notification({ ...notification, ...value});
     await notification.save();
 
     return response.status(204).send();
@@ -83,7 +85,8 @@ exports.delete = async (request, response) => {
 exports.read = async (request, response) => {
   try {
     const { _id } = request.params;
-    const notification = await Notification.findOne({ _id, deletedAt: null });
+    let notification = await Notification.findOne({ _id, deletedAt: null });
+    const value = getDefaultDataWhenUpdate(request);
 
     if (!notification) {
       return response.status(404).json({ message: 'Notificação não encontrada' });
@@ -93,7 +96,7 @@ exports.read = async (request, response) => {
       return response.status(400).json({ message: 'Notificação já foi lida' });
     }
 
-    notification = {...notification, updatedAt: new Date(), readAt: new Date()};
+    notification = new Notification({...notification, ...value});
     await notification.save();
 
     response.status(200).json({ message: 'Notificação atualizada com sucesso' });
@@ -106,12 +109,13 @@ exports.readAll = async (request, response) => {
   try {
     const { _id } = request.user;
     const user = await User.findById(_id);
+    const value = getDefaultDataWhenUpdate(request);
 
     if (!user) {
       throw new Error('Usuário não encontrado');
     }
 
-    await Notification.updateMany({ user: userId }, { $set: { updatedAt: new Date(), readAt: new Date() } });
+    await Notification.updateMany({ user: userId }, { $set: { readAt: new Date(), ...value } });
 
     await notification.save();
     response.status(200).json({ message: 'Notificações atualizadas com sucesso' });

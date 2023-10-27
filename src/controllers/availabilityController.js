@@ -1,4 +1,5 @@
 const { Availability } = require('../database')
+const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get = async (request, response) => {
   try {
@@ -29,13 +30,12 @@ exports.getById = async (request, response) => {
 
 exports.post = async (request, response) => {
   try {
-    const user = request.user;
+    const value = getDefaultDataWhenCreate(request);
+
     const availability = request.body;
     const newAvailability = new Availability({
       ...availability,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      generator: ObjectId(user._id)
+      ...value
     });
     await newAvailability.save();
 
@@ -48,12 +48,16 @@ exports.post = async (request, response) => {
 exports.put = async (request, response) => {
   try {
     const { _id } = request.params;
-    const availability = await Availability.findOne({ _id, deletedAt: null });
+    let availability = await Availability.findOne({ _id, deletedAt: null });
 
     if (!availability) {
       return response.status(404).json({ message: 'Disponibilidade não encontrada' });
     }
-    availability = { ...availability, ...request.availability, updatedAt: new Date(), };
+
+    const value = getDefaultDataWhenUpdate(request);
+    const params = request.body;
+
+    availability = new Availability({ ...availability, ...params, ...value });
     await availability.save();
 
     response.status(200).json({ message: 'Disponibilidade atualizada com sucesso' });
@@ -65,13 +69,14 @@ exports.put = async (request, response) => {
 exports.delete = async (request, response) => {
   try {
     const { _id } = request.params
-    const availability = await Availability.findOne({ _id, deletedAt: null });
+    let availability = await Availability.findOne({ _id, deletedAt: null });
+    const value = getDefaultDataWhenDelete(request);
 
     if (!availability) {
       return response.status(404).json({ message: 'Disponibilidade não encontrada' });
     }
 
-    availability.deletedAt = new Date();
+    availability = new Availability({ ...availability, ...value});
     await availability.save();
 
     return response.status(204).send();

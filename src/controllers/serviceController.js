@@ -1,4 +1,5 @@
 const { Service } = require('../database')
+const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get =  async (request, response) => {
   try {
@@ -28,12 +29,12 @@ exports.getById = async (request, response) => {
   }
 };
 
-
 exports.post = async (request, response) => {
   try {
+    const value = getDefaultDataWhenCreate(request);
     const service = request.body;
 
-    const newService = new Service({...service, createdAt: new Date(), updatedAt: new Date()});
+    const newService = new Service({...service, ...value});
     await newService.save();
 
     response.status(201).json({ message: 'Serviço criado com sucesso', service: newService });
@@ -45,13 +46,16 @@ exports.post = async (request, response) => {
 exports.put = async (request, response) => {
   try {
     const { _id } = request.params;
+    let value = getDefaultDataWhenUpdate(request);
 
     const service = await Service.findOne({ _id, deletedAt: null });
+    const params = request.body;
+
 
     if (!service) {
       return response.status(404).json({ message: 'Serviço não encontrado' });
     }
-    service = {...service, ...request.service, updatedAt: new Date()};
+    service = new Service({...service, ...params, ...value});
     await service.save();
 
     response.status(200).json({ message: 'Serviço atualizado com sucesso' });
@@ -61,15 +65,17 @@ exports.put = async (request, response) => {
 };
 
 exports.delete = async (request, response) => {
-  const { _id } = request.params
   try {
-    const service = await Service.findOne({ _id, deletedAt: null });
+    const { _id } = request.params
+    const value = getDefaultDataWhenDelete(request);
+
+    let service = await Service.findOne({ _id, deletedAt: null });
 
     if (!service) {
       return response.status(404).json({ message: 'Serviço não encontrado' });
     }
 
-    service.deletedAt = new Date();
+    service = new Service({ ...service, ...value});
     await service.save();
 
     return response.status(204).send();
