@@ -67,7 +67,7 @@ const sendJWTToken = async (email, messageBuilder, request) => {
             expiresIn: '1d'
         })
 
-    const message = messageBuilder(email, token, request)
+    const message = messageBuilder(email, Buffer.from(token).toString('base64'), request)
 
     let transporter = getTransport()
     await transporter.sendMail(message).catch(console.error)
@@ -83,7 +83,7 @@ const sendVerification = (request, email) => {
 
 const verifyEmail = token => {
     try {
-        return jwt.verify(token, process.env.JWT_SECRET)
+        return jwt.verify(Buffer.from(token, 'base64').toString('ascii'), process.env.JWT_SECRET)
     }
     catch (e) {
         return null

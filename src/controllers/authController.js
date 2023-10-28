@@ -94,6 +94,7 @@ exports.verify =  async (request, response) => {
     if (info) {
       await User.updateOne({ email: info.email }, { $set: { verifiedAt: new Date() } });
       response.status(200).json({ message: 'Email verificado com sucesso' });
+      return
     } 
 
     throw new Error('Token inválido ou expirado');
