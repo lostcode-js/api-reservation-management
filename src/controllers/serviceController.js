@@ -5,7 +5,7 @@ exports.get =  async (request, response) => {
   try {
     const params = request?.query ?? {};
 
-    const services = await Service.find({...params, deletedAt: null });
+    const services = await Service.find({...params, deletedAt: null }).populate('createdBy');
 
     response.status(200).json({ services });
   } catch (error) {

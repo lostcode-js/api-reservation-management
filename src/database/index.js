@@ -80,7 +80,6 @@ const schemas = {
     feedback: new Schema({
         note: Number,
         message: String,
-        readAt: Date,
         ...defaultColumns
     }),
     service: new Schema({
