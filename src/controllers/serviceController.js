@@ -49,14 +49,12 @@ exports.put = async (request, response) => {
     let value = getDefaultDataWhenUpdate(request);
 
     const service = await Service.findOne({ _id, deletedAt: null });
-    const params = request.body;
-
 
     if (!service) {
       return response.status(404).json({ message: 'Serviço não encontrado' });
     }
-    service = new Service({...service, ...params, ...value});
-    await service.save();
+
+    await Service.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
     response.status(200).json({ message: 'Serviço atualizado com sucesso' });
   } catch (error) {
@@ -70,15 +68,15 @@ exports.delete = async (request, response) => {
     const value = getDefaultDataWhenDelete(request);
 
     let service = await Service.findOne({ _id, deletedAt: null });
-
+    console.log({service, before: ''})
     if (!service) {
       return response.status(404).json({ message: 'Serviço não encontrado' });
     }
 
-    service = new Service({ ...service, ...value});
-    await service.save();
+    await Service.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    return response.status(204).send();
+    console.log({service, after: '', teste: { ...service, ...value}})
+    response.status(200).send({ message: 'Serviço removido com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir o serviço' });
   }

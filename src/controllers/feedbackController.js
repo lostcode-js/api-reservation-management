@@ -57,12 +57,8 @@ exports.put = async (request, response) => {
     }
 
     const value = getDefaultDataWhenUpdate(request);
-    const params = request.body;
 
-    feedback = new Feedback({
-      ...feedback, ...params, ...value
-    });
-    await feedback.save();
+    await Feedback.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
     response.status(200).json({ message: 'Feedback atualizado com sucesso' });
   } catch (error) {
@@ -81,10 +77,9 @@ exports.delete = async (request, response) => {
       return response.status(404).json({ message: 'Feedback não encontrado' });
     }
 
-    feedback = new Feedback({ ...feedback, ...value});
-    await feedback.save();
+    await Feedback.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    return response.status(204).send();
+    return response.status(200).send({ message: 'Feedback removido com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir o feedback' });
   }

@@ -27,7 +27,6 @@ exports.getById = async (request, response) => {
   }
 };
 
-
 exports.post = async (request, response) => {
   try {
     const value = getDefaultDataWhenCreate(request);
@@ -55,10 +54,7 @@ exports.put = async (request, response) => {
     }
 
     const value = getDefaultDataWhenUpdate(request);
-    const params = request.body;
-
-    availability = new Availability({ ...availability, ...params, ...value });
-    await availability.save();
+    await Availability.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
     response.status(200).json({ message: 'Disponibilidade atualizada com sucesso' });
   } catch (error) {
@@ -75,11 +71,9 @@ exports.delete = async (request, response) => {
     if (!availability) {
       return response.status(404).json({ message: 'Disponibilidade não encontrada' });
     }
+    await Availability.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    availability = new Availability({ ...availability, ...value});
-    await availability.save();
-
-    return response.status(204).send();
+    return response.status(200).send({ message: 'Disponibilidade removida com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir a disponibilidade' });
   }

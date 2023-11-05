@@ -54,10 +54,8 @@ exports.put = async (request, response) => {
     }
 
     const value = getDefaultDataWhenUpdate(request);
-    const params = request.body;
 
-    user = new User({...user, ...params, ...value});
-    await user.save();
+    await User.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
     response.status(200).json({ message: 'Usuário atualizado com sucesso' });
   } catch (error) {
@@ -66,7 +64,7 @@ exports.put = async (request, response) => {
 };
 
 exports.delete = async (request, response) => {
-  try {
+  try { 
     const { _id } = request.params
     const value = getDefaultDataWhenDelete(request);
   
@@ -76,10 +74,9 @@ exports.delete = async (request, response) => {
       return response.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    user = new User({ ...user, ...value});
-    await user.save();
+    await User.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    return response.status(204).send();
+    return response.status(200).send({ message: 'Usuário removido com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir o usuário' });
   }

@@ -51,10 +51,8 @@ exports.put = async (request, response) => {
     }
 
     const value = getDefaultDataWhenUpdate(request);
-    const params = request.body;
 
-    appointment = new Appointment({...appointment, ...params, ...value});
-    await appointment.save();
+    await Appointment.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
     response.status(200).json({ message: 'Reserva atualizada com sucesso' });
   } catch (error) {
@@ -72,10 +70,9 @@ exports.delete = async (request, response) => {
     }
     const value = getDefaultDataWhenDelete(request);
 
-    appointment = new Appointment({ ...appointment, ...value});
-    await appointment.save();
+    await Appointment.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    return response.status(204).send();
+    return response.status(200).send({ message: 'Reserva removida com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir a reserva' });
   }

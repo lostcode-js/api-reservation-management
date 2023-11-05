@@ -52,10 +52,9 @@ exports.put = async (request, response) => {
     }
 
     const value = getDefaultDataWhenUpdate(request);
-    const params = request.body;
 
-    notification = new Notification({...notification, ...params, ...value});
-    await notification.save();
+    await Notification.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
+
 
     response.status(200).json({ message: 'Notificação atualizada com sucesso' });
   } catch (error) {
@@ -73,10 +72,9 @@ exports.delete = async (request, response) => {
       return response.status(404).json({ message: 'Notificação não encontrada' });
     }
 
-    notification =  new Notification({ ...notification, ...value});
-    await notification.save();
+    await Notification.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    return response.status(204).send();
+    return response.status(200).send({ message: 'Notificação removida com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir a notificação' });
   }
