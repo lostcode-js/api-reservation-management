@@ -58,7 +58,7 @@ exports.put = async (request, response) => {
       return response.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    if(user?.password !== request.body.password){
+    if(request.body?.password && user?.password !== request.body.password){
       user.password = sha256(request.body.password)
     }
 
