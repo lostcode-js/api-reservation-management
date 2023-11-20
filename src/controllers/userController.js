@@ -1,11 +1,12 @@
 const { User } = require('../database')
 const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
+const { sha256 } = require('../utils/auth.js')
 
 exports.get =  async (request, response) => {
   try {
     const params = request.query ?? {};
 
-    const users = await User.find({...params, deletedAt: null });
+    const users = await User.find({...params, deletedAt: null }).populate('createdBy').populate('employer').populate('services');
 
     response.status(200).json({ users });
   } catch (error) {
@@ -35,6 +36,10 @@ exports.post = async (request, response) => {
     const value = getDefaultDataWhenCreate(request);
     const user = request.body;
 
+    if(user?.password){
+      user.password = sha256(user?.password)
+    }
+
     const newUser = new User({...user, ...value});
     await newUser.save();
 
@@ -53,12 +58,18 @@ exports.put = async (request, response) => {
       return response.status(404).json({ message: 'Usuário não encontrado' });
     }
 
+    if(user?.password !== request.body.password){
+      user.password = sha256(request.body.password)
+    }
+
     const value = getDefaultDataWhenUpdate(request);
 
     await User.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
     response.status(200).json({ message: 'Usuário atualizado com sucesso' });
   } catch (error) {
+    console.log({error})
+
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar o usuário' });
   }
 };

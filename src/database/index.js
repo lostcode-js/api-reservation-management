@@ -29,6 +29,7 @@ const schemas = {
         phone: String,
         about: String,
         picture: String,
+        address: String,
         ...defaultColumns
     }),
     user: new Schema({
@@ -39,6 +40,7 @@ const schemas = {
         about: String,
         picture: String,
         password: String,
+        address: String,
         type: {
             type: String,
             enum : ['user','admin','employee'],
@@ -52,8 +54,8 @@ const schemas = {
         employee: { type: ObjectId, ref: 'user' },
         customer: { type: ObjectId, ref: 'user' },
         date: Date,
-        startTime: Date,
-        endTime: Date,
+        startTime: String,
+        endTime: String,
         services: [{ type: ObjectId, ref: 'service' }],
         ...defaultColumns
     }),
@@ -85,6 +87,7 @@ const schemas = {
     service: new Schema({
         description: String,
         price: Number,
+        time: Number,
         ...defaultColumns
     }),
 }

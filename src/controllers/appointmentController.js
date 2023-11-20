@@ -4,7 +4,7 @@ const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDe
 exports.get =  async (request, response) => {
   try {
     const params = request?.query ?? {};
-    const appointments = await Appointment.find({...params, deletedAt: null });
+    const appointments = await Appointment.find({...params, deletedAt: null }).populate('services').populate('createdBy').populate('employee').populate('customer');
 
     response.status(200).json({ appointments });
   } catch (error) {
@@ -32,11 +32,16 @@ exports.post = async (request, response) => {
     const appointment = request.body;
     const value = getDefaultDataWhenCreate(request);
 
+    console.log({appointment})
+
     const newAppointment = new Appointment({...appointment, ...value});
+    console.log({newAppointment})
     await newAppointment.save();
 
     response.status(201).json({ message: 'Reserva criada com sucesso', appointment: newAppointment });
   } catch (error) {
+    console.log({error})
+
     response.status(500).json({ message: 'Ocorreu um erro ao criar a reserva' });
   }
 };

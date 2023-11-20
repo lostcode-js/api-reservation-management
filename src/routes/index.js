@@ -4,7 +4,6 @@ const { Token } = require('../database')
 
 router.use(async (request, response, next) => {
     try {
-        console.log(request.headers.authorization)
         const tokenWithoutPrefix  = (request.headers.authorization || '').slice(7)
         if (!tokenWithoutPrefix) return next()
         
@@ -17,9 +16,9 @@ router.use(async (request, response, next) => {
         token.lastActivity = new Date()
         token.save()
 
-        console.log(token)
         return next()
     } catch (error) {
+        console.log({error})
         response.status(500).json({ message: 'Ocorreu um erro ao validar token de autenticação...' });
     }
 })

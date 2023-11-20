@@ -36,10 +36,13 @@ exports.post = async (request, response) => {
       ...availability,
       ...value
     });
+    console.log({newAvailability})
     await newAvailability.save();
 
     response.status(201).json({ message: 'Disponibilidade criada com sucesso', availability: newAvailability });
   } catch (error) {
+    console.log({error})
+
     response.status(500).json({ message: 'Ocorreu um erro ao criar a disponibilidade' });
   }
 };
