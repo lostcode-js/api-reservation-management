@@ -56,6 +56,7 @@ const schemas = {
         date: Date,
         startTime: String,
         endTime: String,
+        message: String,
         services: [{ type: ObjectId, ref: 'service' }],
         ...defaultColumns
     }),

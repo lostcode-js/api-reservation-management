@@ -58,13 +58,15 @@ exports.put = async (request, response) => {
       return response.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    if(request.body?.password && user?.password !== request.body.password){
-      user.password = sha256(request.body.password)
+    let password = user.password
+
+    if(request.body?.password && password !== request.body.password){
+      password = sha256(request.body.password)
     }
 
     const value = getDefaultDataWhenUpdate(request);
 
-    await User.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
+    await User.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value, password } });
 
     response.status(200).json({ message: 'Usuário atualizado com sucesso' });
   } catch (error) {
