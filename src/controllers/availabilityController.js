@@ -4,7 +4,7 @@ const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDe
 exports.get = async (request, response) => {
   try {
     const params = request?.query ?? {};
-    const availabilities = await Availability.find({ ...params, deletedAt: null });
+    const availabilities = await Availability.find({ ...params, deletedAt: null }).populate('company').populate('employee').populate('createdBy');
 
     response.status(200).json({ availabilities });
   } catch (error) {

@@ -65,8 +65,8 @@ const schemas = {
         employee: { type: ObjectId, ref: 'user' },
         date: Date,
         dayOfWeek: Number,
-        startTime: Date,
-        endTime: Date,
+        startTime: String,
+        endTime: String,
         type: {
             type: String,
             enum : ['available','unavailable'],
