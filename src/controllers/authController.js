@@ -124,14 +124,6 @@ exports.changePassword = async (request, response) => {
   try {
     const { old, token, password, email } = request.body;
 
-    const user = await User.updateOne({ email: email }, { $set: { verifiedAt: new Date(), password: sha256(password), updatedAt: new Date() } });
-
-    console.log(user, email, password, sha256(password))
-    
-    response.status(200).json({ message: 'Senha alterada com sucesso' });
-
-    return
-
     if (old && request.user) {
       if (sha256(old) !== request.user.password) {
         throw new Error('Senha antiga incorreta');

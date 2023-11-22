@@ -6,7 +6,6 @@ exports.get = async (request, response) => {
     const params = request?.query ?? {};
 
     const feedbacks = await Feedback.find({ ...params, deletedAt: null }).populate('createdBy');
-    console.log(feedbacks, params)
     response.status(200).json({ feedbacks });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar os feedbacks' });

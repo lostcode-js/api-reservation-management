@@ -2,7 +2,6 @@ const { createHash } = require('crypto')
 
 exports.requireAuth = async (request, response, next) => {
     try {
-        console.log(request.user)
         if (!request.user) {
             return response.status(401).json({ message: 'Token inválido' });
         }

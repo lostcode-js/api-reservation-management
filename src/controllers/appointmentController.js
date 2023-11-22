@@ -32,10 +32,7 @@ exports.post = async (request, response) => {
     const appointment = request.body;
     const value = getDefaultDataWhenCreate(request);
 
-    console.log({appointment})
-
     const newAppointment = new Appointment({...appointment, ...value});
-    console.log({newAppointment})
     await newAppointment.save();
 
     response.status(201).json({ message: 'Reserva criada com sucesso', appointment: newAppointment });

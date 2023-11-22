@@ -68,14 +68,12 @@ exports.delete = async (request, response) => {
     const value = getDefaultDataWhenDelete(request);
 
     let service = await Service.findOne({ _id, deletedAt: null });
-    console.log({service, before: ''})
     if (!service) {
       return response.status(404).json({ message: 'Serviço não encontrado' });
     }
 
     await Service.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    console.log({service, after: '', teste: { ...service, ...value}})
     response.status(200).send({ message: 'Serviço removido com sucesso' });
   } catch (error) {
     return response.status(500).json({ message: 'Ocorreu um erro ao excluir o serviço' });
