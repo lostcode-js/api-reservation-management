@@ -36,7 +36,7 @@ exports.post = async (request, response) => {
     ...value});
     await newNotification.save();
 
-    response.status(201).json({ message: 'Notificação criad com sucesso', notification: newNotification });
+    response.status(201).json({ message: 'Notificação criada com sucesso', notification: newNotification });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao criar a notificação' });
   }
