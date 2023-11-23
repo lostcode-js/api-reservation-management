@@ -1,10 +1,10 @@
-const { Notification, ObjectId } = require('../database')
+const { Notification, ObjectId, User } = require('../database')
 const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 exports.get =  async (request, response) => {
   try {
     const params = request?.query ?? {};
-    const notifications = await Notification.find({...params, deletedAt: null });
+    const notifications = await Notification.find({...params, deletedAt: null }).populate('user');
 
     response.status(200).json({ notifications });
   } catch (error) {
@@ -113,11 +113,11 @@ exports.readAll = async (request, response) => {
       throw new Error('Usuário não encontrado');
     }
 
-    await Notification.updateMany({ user: userId }, { $set: { readAt: new Date(), ...value } });
+    await Notification.updateMany({ user: user._id }, { $set: { readAt: new Date(), ...value } });
 
-    await notification.save();
     response.status(200).json({ message: 'Notificações atualizadas com sucesso' });
   } catch (error) {
+    console.log({error})
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar as notificações' });
   }
 };

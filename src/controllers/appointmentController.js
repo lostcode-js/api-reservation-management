@@ -1,8 +1,8 @@
-const { Appointment, ObjectId } = require('../database')
+const { Appointment, ObjectId, User, Notification } = require('../database')
 const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 function formatData(data) {
-  const dateObj = new Date(dateString);
+  const dateObj = new Date(data);
   const day = String(dateObj.getDate()).padStart(2, '0');
   const month = String(dateObj.getMonth() + 1).padStart(2, '0'); 
   const year = dateObj.getFullYear();
@@ -51,7 +51,7 @@ exports.post = async (request, response) => {
     const users = await User.find({type: 'admin', deletedAt: null });
 
     await users.map(async item => {
-      const newNotification = new Notification({user: item._id, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, ...value});
+      const newNotification = new Notification({user: item._id, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, createdAt: new Date(), ...value});
 
       await newNotification.save();
     })
@@ -80,13 +80,14 @@ exports.put = async (request, response) => {
     const users = await User.find({type: 'admin', deletedAt: null });
 
     await users.map(async item => {
-      const newNotification = new Notification({user: item._id, message: `Uma reserva foi atualizada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, ...value});
+      const newNotification = new Notification({user: item._id, message: `Uma reserva foi atualizada para a data ${formatData(request.body.date)} - ${request.body.startTime}`, createdAt: new Date(), ...value});
 
       await newNotification.save();
     })
 
     response.status(200).json({ message: 'Reserva atualizada com sucesso' });
   } catch (error) {
+    console.log({error})
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar a reserva' });
   }
 };
@@ -106,7 +107,7 @@ exports.delete = async (request, response) => {
     const users = await User.find({type: 'admin', deletedAt: null });
 
     await users.map(async item => {
-      const newNotification = new Notification({user: item._id, message: `Uma reserva foi cancelada do cliente com email ${appointment.customer?.email} `, ...value});
+      const newNotification = new Notification({user: item._id, message: `Uma reserva foi cancelada do cliente com email ${appointment.customer?.email}`,createdAt: new Date(), ...value});
 
       await newNotification.save();
     })
