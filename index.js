@@ -13,7 +13,6 @@ app.listen(port, () => {
 })
 */
 
-
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -22,7 +21,7 @@ app.use(cors({
     methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
 }));
 
-app.use('/api', require('.src/routes/index.js'))
+app.use('/api', require('./src/routes/index.js'))
 
 app.get("/", (req, res) => {
   res.send("Hello World!")
