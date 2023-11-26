@@ -11,7 +11,7 @@ app.listen(port, () => {
   console.log(`Example app listen por ${port}`)
 })
 
-/*
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -20,8 +20,8 @@ app.use(cors({
     methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
 }));
 
-app.use('/api', require('./routes'))
-*/
+//app.use('/api', require('./routes'))
+
 app.get("/", (req, res) => {
   res.send("Hello World!")
 })
