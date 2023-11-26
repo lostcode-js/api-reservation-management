@@ -7,7 +7,7 @@ const port = process.env.APP_PORT ?? '8000';
 Promise.resolve()
 .then(initDatabase)
 .then(() => new Promise((resolve, reject) => {
-  const server = require('http').createServer(app).listen(port, err =>
+  const server = require('http').createServer(app).listen(port, '0.0.0.0', err =>
     err ? reject(err) : resolve(server)
   )
 }))
