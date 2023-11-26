@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { initDatabase } = require('src/database')
+const { initDatabase } = require('./src/database/index.js')
 
 require('dotenv').config()
 
@@ -22,7 +22,7 @@ app.use(cors({
     methods: ['GET','POST','DELETE','UPDATE','PUT','PATCH']
 }));
 
-app.use('/api', require('src/routes'))
+app.use('/api', require('.src/routes/index.js'))
 
 app.get("/", (req, res) => {
   res.send("Hello World!")
