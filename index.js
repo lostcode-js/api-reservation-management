@@ -6,7 +6,7 @@ require('dotenv').config()
 
 const app = express()
 const port = process.env.APP_PORT ?? '3000';
-
+/*
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -16,11 +16,16 @@ app.use(cors({
 }));
 
 app.use('/api', require('./routes'))
-
+*/
 app.get("/", (req, res) => {
   res.send("Hello World!")
 })
 
+app.listen(port, () => {
+  console.log(`Example app listen por ${port}`)
+})
+
+/*
 Promise.resolve()
 .then(initDatabase)
 .then(() => new Promise((resolve, reject) => {
@@ -30,5 +35,4 @@ Promise.resolve()
 }))
 .then(() => console.log('Servidor iniciado com sucesso!', `porta: ${port}`))
 .catch((error) => console.error("Erro ao iniciar servidor", error))
-
-module.exports = app;
+*/
