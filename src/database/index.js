@@ -87,6 +87,7 @@ const schemas = {
     }),
     service: new Schema({
         description: String,
+        about: String,
         price: Number,
         time: Number,
         ...defaultColumns
