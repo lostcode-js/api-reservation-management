@@ -1,12 +1,38 @@
 const { Notification, ObjectId, User } = require('../database')
 const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
-exports.get =  async (request, response) => {
+exports.get = async (request, response) => {
   try {
     const params = request?.query ?? {};
-    const notifications = await Notification.find({...params, deletedAt: null }).populate('user');
+
+    const notifications = await Notification.find({ ...params, deletedAt: null }).populate('user');
 
     response.status(200).json({ notifications });
+  } catch (error) {
+    response.status(500).json({ message: 'Ocorreu um erro ao buscar as notificações' });
+  }
+};
+
+exports.getPaginate = async (request, response) => {
+  try {
+    const paginate = JSON.parse(request.query.paginate ?? '{}');
+
+    const currentPage = paginate.currentPage || 1;
+    const itemsPerPage = paginate.itemsPerPage || 10;
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    delete request.query.paginate
+
+    const params = request.query ?? {};
+
+    const totalItems = await Notification.countDocuments({ ...params, deletedAt: null });
+
+    const notifications = await Notification.find({ ...params, deletedAt: null }).skip(skip)
+      .limit(itemsPerPage).populate('user');
+
+    response.status(200).json({ notifications, paginate: {
+      currentPage, itemsPerPage, totalItems
+    } });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar as notificações' });
   }
@@ -32,8 +58,10 @@ exports.post = async (request, response) => {
     const value = getDefaultDataWhenCreate(request);
     const notification = request.body;
 
-    const newNotification = new Notification({...notification,
-    ...value});
+    const newNotification = new Notification({
+      ...notification,
+      ...value
+    });
     await newNotification.save();
 
     response.status(201).json({ message: 'Notificação criada com sucesso', notification: newNotification });
@@ -94,7 +122,7 @@ exports.read = async (request, response) => {
       return response.status(400).json({ message: 'Notificação já foi lida' });
     }
 
-    notification = new Notification({...notification, ...value});
+    notification = new Notification({ ...notification, ...value });
     await notification.save();
 
     response.status(200).json({ message: 'Notificação atualizada com sucesso' });
@@ -117,7 +145,7 @@ exports.readAll = async (request, response) => {
 
     response.status(200).json({ message: 'Notificações atualizadas com sucesso' });
   } catch (error) {
-    console.log({error})
+    console.log({ error })
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar as notificações' });
   }
 };

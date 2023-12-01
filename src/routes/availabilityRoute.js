@@ -4,6 +4,7 @@ const controller = require('../controllers/availabilityController')
 const { requireAuth } = require('../utils/auth.js')
 
 router.get('/', requireAuth, controller.get);
+router.get('/paginate', requireAuth, controller.getPaginate);
 router.get('/:_id', requireAuth, controller.getById);
 router.get('/days-employee/:_id', requireAuth, controller.getDaysAvailabilityOfEmployee);
 router.get('/hours-employee/:_id', requireAuth, controller.getHoursAvailabilityOfEmployee);

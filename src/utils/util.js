@@ -16,8 +16,6 @@ const getDefaultDataWhenDelete  = request => {
     return { deletedBy, deletedAt: new Date() }
 }
 
-
-
 module.exports = {
     getDefaultDataWhenCreate,
     getDefaultDataWhenUpdate,

@@ -15,6 +15,31 @@ exports.get =  async (request, response) => {
   }
 };
 
+exports.getPaginate = async (request, response) => {
+  try {
+    const paginate = JSON.parse(request.query.paginate ?? '{}');
+
+    const currentPage = paginate.currentPage || 1;
+    const itemsPerPage = paginate.itemsPerPage || 10;
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    delete request.query.paginate
+
+    const params = request.query ?? {};
+
+    const totalItems = await User.countDocuments({ ...params, deletedAt: null });
+
+    const users = await User.find({ ...params, deletedAt: null }).skip(skip)
+      .limit(itemsPerPage).populate('createdBy').populate('employer').populate('services');
+
+    response.status(200).json({ users, paginate: {
+      currentPage, itemsPerPage, totalItems
+    } });
+  } catch (error) {
+    response.status(500).json({ message: 'Ocorreu um erro ao buscar as usuários' });
+  }
+};
+
 exports.getById = async (request, response) => {
   try {
     const { _id } = request.params;

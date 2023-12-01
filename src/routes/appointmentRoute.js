@@ -4,6 +4,7 @@ const controller = require('../controllers/appointmentController')
 const { requireAuth } = require('../utils/auth.js')
 
 router.get('/', requireAuth, controller.get);
+router.get('/paginate', requireAuth, controller.getPaginate);
 router.get('/:_id', requireAuth, controller.getById);
 router.post('/', requireAuth, controller.post);
 router.put('/:_id', requireAuth, controller.put);
