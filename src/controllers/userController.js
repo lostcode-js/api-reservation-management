@@ -2,11 +2,11 @@ const { User } = require('../database')
 const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 const { sha256 } = require('../utils/auth.js')
 
-exports.get =  async (request, response) => {
+exports.get = async (request, response) => {
   try {
     const params = request.query ?? {};
 
-    const users = await User.find({...params, deletedAt: null }).populate('createdBy').populate('employer').populate('services');
+    const users = await User.find({ ...params, deletedAt: null }).populate('createdBy').populate('employer').populate('services');
 
     response.status(200).json({ users });
   } catch (error) {
@@ -22,19 +22,26 @@ exports.getPaginate = async (request, response) => {
     const currentPage = paginate.currentPage || 1;
     const itemsPerPage = paginate.itemsPerPage || 10;
     const skip = (currentPage - 1) * itemsPerPage;
+    
+    const sort = request.query?.sort ? JSON.parse(request.query?.sort) : { key: 'createdAt', order: -1 };
+    let sorted = {}
+    sorted[sort.key] = sort.order
 
     delete request.query.paginate
+    delete request.query.sort
 
     const params = request.query ?? {};
 
     const totalItems = await User.countDocuments({ ...params, deletedAt: null });
 
-    const users = await User.find({ ...params, deletedAt: null }).skip(skip)
+    const users = await User.find({ ...params, deletedAt: null }).skip(skip).sort(sorted)
       .limit(itemsPerPage).populate('createdBy').populate('employer').populate('services');
 
-    response.status(200).json({ users, paginate: {
-      currentPage, itemsPerPage, totalItems
-    } });
+    response.status(200).json({
+      users, paginate: {
+        currentPage, itemsPerPage, totalItems
+      }, sort
+    });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar as usuários' });
   }
@@ -61,11 +68,11 @@ exports.post = async (request, response) => {
     const value = getDefaultDataWhenCreate(request);
     const user = request.body;
 
-    if(user?.password){
+    if (user?.password) {
       user.password = sha256(user?.password)
     }
 
-    const newUser = new User({...user, ...value});
+    const newUser = new User({ ...user, ...value });
     await newUser.save();
 
     response.status(201).json({ message: 'Usuário criado com sucesso', user: newUser, user });
@@ -85,7 +92,7 @@ exports.put = async (request, response) => {
 
     let password = user.password
 
-    if(request.body?.password && password !== request.body.password){
+    if (request.body?.password && password !== request.body.password) {
       password = sha256(request.body.password)
     }
 
@@ -95,17 +102,17 @@ exports.put = async (request, response) => {
 
     response.status(200).json({ message: 'Usuário atualizado com sucesso' });
   } catch (error) {
-    console.log({error})
+    console.log({ error })
 
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar o usuário' });
   }
 };
 
 exports.delete = async (request, response) => {
-  try { 
+  try {
     const { _id } = request.params
     const value = getDefaultDataWhenDelete(request);
-  
+
     let user = await User.findOne({ _id, deletedAt: null });
 
     if (!user) {

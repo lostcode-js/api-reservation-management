@@ -4,16 +4,16 @@ const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDe
 function formatData(data) {
   const dateObj = new Date(data);
   const day = String(dateObj.getDate()).padStart(2, '0');
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0'); 
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const year = dateObj.getFullYear();
 
   return `${day}-${month}-${year}`;
 }
 
-exports.get =  async (request, response) => {
+exports.get = async (request, response) => {
   try {
     const params = request?.query ?? {};
-    const appointments = await Appointment.find({...params, deletedAt: null }).populate('services').populate('createdBy').populate('employee').populate('customer');
+    const appointments = await Appointment.find({ ...params, deletedAt: null }).populate('services').populate('createdBy').populate('employee').populate('customer');
 
     response.status(200).json({ appointments });
   } catch (error) {
@@ -29,17 +29,25 @@ exports.getPaginate = async (request, response) => {
     const itemsPerPage = paginate.itemsPerPage || 10;
     const skip = (currentPage - 1) * itemsPerPage;
 
+    const sort = request.query?.sort ? JSON.parse(request.query?.sort) : { key: 'date', order: -1 };
+    let sorted = {}
+    sorted[sort.key] = sort.order
+
     delete request.query.paginate
+    delete request.query.sort
 
     const params = request.query ?? {};
 
     const totalItems = await Appointment.countDocuments({ ...params, deletedAt: null });
 
-    const appointments = await Appointment.find({...params, deletedAt: null }).skip(skip).populate('services').populate('createdBy').populate('employee').populate('customer');
+    const appointments = await Appointment.find({ ...params, deletedAt: null }).sort(sorted)
+      .skip(skip).populate('services').populate('createdBy').populate('employee').populate('customer');
 
-    response.status(200).json({ appointments, paginate: {
-      currentPage, itemsPerPage, totalItems
-    } });
+    response.status(200).json({
+      appointments, paginate: {
+        currentPage, itemsPerPage, totalItems
+      }, sort
+    });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar as reservas' });
   }
@@ -65,24 +73,24 @@ exports.post = async (request, response) => {
     const appointment = request.body;
     const value = getDefaultDataWhenCreate(request);
 
-    const newAppointment = new Appointment({...appointment, ...value});
+    const newAppointment = new Appointment({ ...appointment, ...value });
     await newAppointment.save();
 
-    const newNotification = new Notification({user: appointment.employee, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, ...value});
+    const newNotification = new Notification({ user: appointment.employee, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, ...value });
 
     await newNotification.save();
 
-    const users = await User.find({type: 'admin', deletedAt: null });
+    const users = await User.find({ type: 'admin', deletedAt: null });
 
     await users.map(async item => {
-      const newNotification = new Notification({user: item._id, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, createdAt: new Date(), ...value});
+      const newNotification = new Notification({ user: item._id, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, createdAt: new Date(), ...value });
 
       await newNotification.save();
     })
 
     response.status(201).json({ message: 'Reserva criada com sucesso', appointment: newAppointment });
   } catch (error) {
-    console.log({error})
+    console.log({ error })
 
     response.status(500).json({ message: 'Ocorreu um erro ao criar a reserva' });
   }
@@ -101,17 +109,17 @@ exports.put = async (request, response) => {
 
     await Appointment.findOneAndUpdate({ _id }, { $set: { ...request.body, ...value } });
 
-    const users = await User.find({type: 'admin', deletedAt: null });
+    const users = await User.find({ type: 'admin', deletedAt: null });
 
     await users.map(async item => {
-      const newNotification = new Notification({user: item._id, message: `Uma reserva foi atualizada para a data ${formatData(request.body.date)} - ${request.body.startTime}`, createdAt: new Date(), ...value});
+      const newNotification = new Notification({ user: item._id, message: `Uma reserva foi atualizada para a data ${formatData(request.body.date)} - ${request.body.startTime}`, createdAt: new Date(), ...value });
 
       await newNotification.save();
     })
 
     response.status(200).json({ message: 'Reserva atualizada com sucesso' });
   } catch (error) {
-    console.log({error})
+    console.log({ error })
     response.status(500).json({ message: 'Ocorreu um erro ao atualizar a reserva' });
   }
 };
@@ -128,10 +136,10 @@ exports.delete = async (request, response) => {
 
     await Appointment.findOneAndUpdate({ _id }, { $set: { ...value } });
 
-    const users = await User.find({type: 'admin', deletedAt: null });
+    const users = await User.find({ type: 'admin', deletedAt: null });
 
     await users.map(async item => {
-      const newNotification = new Notification({user: item._id, message: `Uma reserva foi cancelada do cliente com email ${appointment.customer?.email}`,createdAt: new Date(), ...value});
+      const newNotification = new Notification({ user: item._id, message: `Uma reserva foi cancelada do cliente com email ${appointment.customer?.email}`, createdAt: new Date(), ...value });
 
       await newNotification.save();
     })

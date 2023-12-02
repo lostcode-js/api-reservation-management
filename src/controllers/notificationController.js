@@ -15,25 +15,36 @@ exports.get = async (request, response) => {
 
 exports.getPaginate = async (request, response) => {
   try {
-    const paginate = JSON.parse(request.query.paginate ?? '{}');
+    const paginate = JSON.parse(request.query?.paginate ?? '{}');
 
     const currentPage = paginate.currentPage || 1;
     const itemsPerPage = paginate.itemsPerPage || 10;
     const skip = (currentPage - 1) * itemsPerPage;
 
+    const sort = request.query?.sort ? JSON.parse(request.query?.sort) : { key: 'createdAt' , order: -1 };
+    let sorted = {}
+    sorted[sort.key] = sort.order;
+
     delete request.query.paginate
+    delete request.query.sort
 
     const params = request.query ?? {};
 
     const totalItems = await Notification.countDocuments({ ...params, deletedAt: null });
 
-    const notifications = await Notification.find({ ...params, deletedAt: null }).skip(skip)
-      .limit(itemsPerPage).populate('user');
+    const notifications = await Notification.find({ ...params, deletedAt: null })
+      .sort(sorted)
+      .skip(skip)
+      .limit(itemsPerPage)
+      .populate('user');
 
-    response.status(200).json({ notifications, paginate: {
-      currentPage, itemsPerPage, totalItems
-    } });
+    response.status(200).json({
+      notifications, paginate: {
+        currentPage, itemsPerPage, totalItems
+      }, sort
+    });
   } catch (error) {
+    console.log({error})
     response.status(500).json({ message: 'Ocorreu um erro ao buscar as notificações' });
   }
 };

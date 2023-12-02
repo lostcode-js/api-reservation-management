@@ -5,7 +5,7 @@ exports.get = async (request, response) => {
   try {
     const params = request?.query ?? {};
 
-    const companys = await Company.find({...params, deletedAt: null }).populate('createdBy');
+    const companys = await Company.find({ ...params, deletedAt: null }).populate('createdBy');
 
     response.status(200).json({ companys });
   } catch (error) {
@@ -21,18 +21,25 @@ exports.getPaginate = async (request, response) => {
     const itemsPerPage = paginate.itemsPerPage || 10;
     const skip = (currentPage - 1) * itemsPerPage;
 
+    const sort = request.query?.sort ? JSON.parse(request.query?.sort) : { key: 'name', order: 1 };
+    let sorted = {}
+    sorted[sort.key] = sort.order
+
+    delete request.query.sort
     delete request.query.paginate
 
     const params = request.query ?? {};
 
     const totalItems = await Company.countDocuments({ ...params, deletedAt: null });
 
-    const companys = await Company.find({...params, deletedAt: null }).skip(skip)
-    .limit(itemsPerPage).populate('createdBy');
+    const companys = await Company.find({ ...params, deletedAt: null }).skip(skip).sort(sorted)
+      .limit(itemsPerPage).populate('createdBy');
 
-    response.status(200).json({ companys, paginate: {
-      currentPage, itemsPerPage, totalItems
-    } });
+    response.status(200).json({
+      companys, paginate: {
+        currentPage, itemsPerPage, totalItems
+      }, sort
+    });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar as empresas' });
   }
@@ -59,7 +66,7 @@ exports.post = async (request, response) => {
     const value = getDefaultDataWhenCreate(request);
     const company = request.body;
 
-    const newCompany = new Company({...company, ...value});
+    const newCompany = new Company({ ...company, ...value });
     await newCompany.save();
 
     response.status(201).json({ message: 'Empresa criada com sucesso', company: newCompany });
@@ -68,7 +75,7 @@ exports.post = async (request, response) => {
   }
 };
 
-exports.put =  async (request, response) => {
+exports.put = async (request, response) => {
   try {
     const { _id } = request.params;
     let company = await Company.findOne({ _id, deletedAt: null });
@@ -86,7 +93,7 @@ exports.put =  async (request, response) => {
   }
 };
 
-exports.delete =  async (request, response) => {
+exports.delete = async (request, response) => {
   try {
     const { _id } = request.params
     const value = getDefaultDataWhenDelete(request);

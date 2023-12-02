@@ -20,18 +20,25 @@ exports.getPaginate = async (request, response) => {
     const itemsPerPage = paginate.itemsPerPage || 10;
     const skip = (currentPage - 1) * itemsPerPage;
 
+    const sort = request.query?.sort ? JSON.parse(request.query?.sort) : { key: 'createdAt', order: -1 };
+    let sorted = {}
+    sorted[sort.key] = sort.order
+
     delete request.query.paginate
+    delete request.query.sort
 
     const params = request.query ?? {};
 
     const totalItems = await Feedback.countDocuments({ ...params, deletedAt: null });
 
-    const feedbacks = await Feedback.find({...params, deletedAt: null }).skip(skip)
-    .limit(itemsPerPage).populate('createdBy');
+    const feedbacks = await Feedback.find({ ...params, deletedAt: null }).skip(skip).sort(sorted)
+      .limit(itemsPerPage).populate('createdBy');
 
-    response.status(200).json({ feedbacks, paginate: {
-      currentPage, itemsPerPage, totalItems
-    } });
+    response.status(200).json({
+      feedbacks, paginate: {
+        currentPage, itemsPerPage, totalItems
+      }, sort
+    });
   } catch (error) {
     response.status(500).json({ message: 'Ocorreu um erro ao buscar os feedbacks' });
   }
