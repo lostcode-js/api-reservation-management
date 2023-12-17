@@ -1,14 +1,16 @@
 #!/bin/bash
 set -e
 
-pem_file="drip-br-server-key.pem"
-server_ip="13.51.146.155"
+pem_file="./drip-br-server-key.pem"
+server_ip="13.53.66.106"
 
 script_upload() {
+  echo "upload... "
   rsync -Phave "ssh -i $pem_file" $1 ubuntu@$server_ip:$1
 }
 
 script_connect() {
+  echo "connect... "
   ssh -i "$pem_file" ubuntu@$server_ip
 }
 
@@ -17,6 +19,7 @@ script_download() {
 }
 
 script_replace_app() {
+  echo "replace_app... "
   ssh -i "$pem_file" ubuntu@$server_ip 'bash -s ' <<EOF
   set -e
   rm -r api/app 2>/dev/null || true
@@ -25,40 +28,49 @@ EOF
 }
 
 script_replace() {
+  echo "replace... "
+  # Conecta-se ao servidor remoto usando SSH
+  # -i "$pem_file": Usa a chave privada especificada em $pem_file para autenticação
+  # ubuntu@$server_ip: Conecta-se como usuário 'ubuntu' no endereço IP especificado
+  # 'bash -s': Inicia um shell Bash no servidor remoto
   ssh -i "$pem_file" ubuntu@$server_ip 'bash -s ' <<EOF
   set -e
   d=`date '+%Y-%m-%d_%H-%M-%S'`
   name="api-backup-\$d"
   mv api \$name
   unzip api.zip -d api
-  mv \$name/node_modules api/node_modules
   cd api
-  yarn
+  npm install
   screen -X -S api quit 2>/dev/null || true
   screen -d -m -S api bash -c 'while true; do sudo node index.js >> log.log 2>> err.log; sleep 1; done'
+  screen -X -S app quit 2>/dev/null || true
+  screen -d -m -S app bash -c 'while true; do sudo node app/server/index.mjs >> log.log 2>> err.log; sleep 1; done'
 EOF
 }
 
 script_pack__() {
+  echo "START pack__... "
   dest="$2"
   dir="$3"
   if [ "$1" = "app" ]; then
     cd app
-    yarn build --dest $dest
+    npm run build --dest $dest
     cd ..
   fi
   if [ -d api/$dir ]; then
     rm -r api/$dir
   fi
   cp -r app/$dest api/$dir
+  echo "END pack__... "
 }
 
 script_pack() {
+  echo "pack... "
   if [ -n "${TESTE}" ]; then
-    script_pack__ "" "dist" "app" # no compile, just copy
+    script_pack__ "" ".output" "app" # no compile, just copy
     script_pack__ "app" "teste" "teste"
   else
-    script_pack__ "$1" "dist" "app"
+    script_pack__ "$1" ".output" "app"
   fi
 
   # versão
@@ -78,11 +90,21 @@ script_pack() {
 }
 
 script_pack_app() {
+  # Muda para o diretório 'app'
   cd app
-  yarn build
-  cd dist
-  zip -r -9 app.zip *
+
+  # Executa o script de construção da aplicação usando npm
+  npm run build
+
+  cd .output
+
+  # Cria um arquivo ZIP chamado 'app.zip' contendo todos os arquivos no diretório atual ('*')
+  zip -r -9 app.zip .
+
+  # Move o arquivo ZIP para o diretório pai ('../../')
   mv app.zip ../../
+
+  # Retorna para o diretório original
   cd ../../
 }
 
@@ -115,10 +137,19 @@ while [ $# -gt 0 ]; do
     script_download $2
     shift
   elif [ "$1" = "auto" ]; then
-    echo "kult pack app upload api.zip replace"
+    echo "script pack app upload api.zip replace"
+
+    echo "INIT script_pack app" 
     script_pack app
+    echo "END script_pack app"
+
+    echo "INIT script_upload api.zip"
     script_upload api.zip
+    echo "END script_upload api.zip"
+
+    echo "INIT script_replace"
     script_replace
+    echo "END script_replace"
   elif [ "$1" = "api" ]; then
     script_pack
     script_upload api.zip

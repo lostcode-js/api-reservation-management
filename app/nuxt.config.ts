@@ -44,7 +44,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      api_url: process.env.API_URL,
+      api_url: 'http://13.53.66.106:8000/api',
     }
   },
   build: {

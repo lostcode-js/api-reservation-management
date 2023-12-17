@@ -2,14 +2,16 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
 require('dotenv').config()
 
+const JWT_SECRET = '0ee4dc1540b617912a23b150eef0a4fe073ca99a'
+
 const getTransport = () => {
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
+        host: process.env.SMTP_HOST ?? 'sandbox.smtp.mailtrap.io',
+        port: process.env.SMTP_PORT ?? 2525,
         secure: false,
         auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
+            user: process.env.SMTP_USER ?? '0a76285ac64525',
+            pass: process.env.SMTP_PASSWORD ?? '34d692164befe8',
         },
     })
 }
@@ -62,7 +64,7 @@ const sendJWTToken = async (email, messageBuilder, request) => {
         {
             email: email
         },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET ?? JWT_SECRET,
         {
             expiresIn: '1d'
         })
@@ -83,7 +85,7 @@ const sendVerification = (request, email) => {
 
 const verifyEmail = token => {
     try {
-        return jwt.verify(Buffer.from(token, 'base64').toString('ascii'), process.env.JWT_SECRET)
+        return jwt.verify(Buffer.from(token, 'base64').toString('ascii'), process.env.JWT_SECRET ?? JWT_SECRET)
     }
     catch (e) {
         return null

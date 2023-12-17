@@ -110,6 +110,8 @@ const doLogin = async (values) => {
       return;
     }
 
+    console.log({data, error})
+
     const userStore = useUserStore();
 
     userStore.setToken(data.value.token);

@@ -1,5 +1,7 @@
 require('dotenv').config()
 
+const ip = 'localhost'
+
 const mongoose = require('mongoose')
 const { Schema } = mongoose
 const { ObjectId } = Schema.Types
@@ -43,8 +45,8 @@ const schemas = {
         address: String,
         type: {
             type: String,
-            enum : ['user','admin','employee'],
-            default: 'user' 
+            enum: ['user', 'admin', 'employee'],
+            default: 'user'
         },
         services: [{ type: ObjectId, ref: 'service' }],
         verifiedAt: Date,
@@ -69,8 +71,8 @@ const schemas = {
         endTime: String,
         type: {
             type: String,
-            enum : ['available','unavailable'],
-            default: 'available' 
+            enum: ['available', 'unavailable'],
+            default: 'available'
         },
         ...defaultColumns
     }),
@@ -112,10 +114,11 @@ module.exports = {
                     useNewUrlParser: true,
                     useUnifiedTopology: true
                 }
-                mongoose.connect(process.env.DATABASE_URL, options)
+                mongoose.connect(`mongodb://${ip}/reservation`, options)
+                //mongoose.connect(process.env.DATABASE_URL, options)
                 console.log('Conexão com Banco de Dados com Sucesso');
                 return resolve();
-            } catch(error) {
+            } catch (error) {
                 console.log('Conexão com Banco de Dados Falhou');
                 return reject(error)
             }

@@ -8,8 +8,8 @@ exports.login = async (request, response) => {
     const navigator = request.headers['user-agent'];
     const hashedPassword = sha256(password);
     
-    const user = await User.findOne({ email, password: hashedPassword, deletedAt: null });
-    
+    const user = await User.findOne({ email: email.toLowerCase(), password: hashedPassword, deletedAt: null });
+
     if (!user) {
       throw new Error('Email ou senha incorretos');
     }
@@ -45,7 +45,7 @@ exports.signup = async (request, response) => {
 
     const newUser = new User({
       name: name?.trim(),
-      email: email?.trim(),
+      email: email?.toLowerCase().trim(),
       password: sha256(password),
       about: '',
       createdAt: new Date(),
@@ -76,7 +76,7 @@ exports.signup = async (request, response) => {
 
 exports.sendVerification = async (request, response) => {
   try {
-    const email = request.params.email;
+    const email = request.params.email.toLowerCase();
 
     await sendVerification(request, email);
 
@@ -106,7 +106,7 @@ exports.verify =  async (request, response) => {
 exports.recoveryPassword = async (request, response) => {
   try {
     const { email } = request.params;
-    const user = await User.findOne({ email, deletedAt: null });
+    const user = await User.findOne({ email: email.toLowerCase(), deletedAt: null });
 
     if (!user) {
       throw new Error('Conta não existe');
@@ -146,7 +146,7 @@ exports.changePassword = async (request, response) => {
 
       const existingUser = await User.findOne({ email: info.email });
 
-      await User.updateOne({ email: info.email }, { $set: { verifiedAt: new Date(), password: sha256(password), updatedAt: new Date(), updatedBy: existingUser._id   } });
+      await User.updateOne({ email: info.email.toLowerCase() }, { $set: { verifiedAt: new Date(), password: sha256(password), updatedAt: new Date(), updatedBy: existingUser._id   } });
       response.status(200).json({ message: 'Senha alterada com sucesso' });
     }
   } catch (error) {

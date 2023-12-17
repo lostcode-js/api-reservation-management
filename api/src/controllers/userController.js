@@ -67,11 +67,15 @@ exports.post = async (request, response) => {
   try {
     const value = getDefaultDataWhenCreate(request);
     const user = request.body;
-
+    
     if (user?.password) {
       user.password = sha256(user?.password)
     }
 
+    if(user?.email) {
+      user.email = user.email.toLowerCase();
+    }
+    
     const newUser = new User({ ...user, ...value });
     await newUser.save();
 
@@ -88,6 +92,10 @@ exports.put = async (request, response) => {
 
     if (!user) {
       return response.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    if(request.body?.email) {
+      request.body.email = request.body.email.toLowerCase();
     }
 
     let password = user.password
