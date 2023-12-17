@@ -1,0 +1,140 @@
+#!/bin/bash
+set -e
+
+pem_file="drip-br-server-key.pem"
+server_ip="13.51.146.155"
+
+script_upload() {
+  rsync -Phave "ssh -i $pem_file" $1 ubuntu@$server_ip:$1
+}
+
+script_connect() {
+  ssh -i "$pem_file" ubuntu@$server_ip
+}
+
+script_download() {
+  rsync -Phave "ssh -i $pem_file" ubuntu@$server_ip:$1 $1
+}
+
+script_replace_app() {
+  ssh -i "$pem_file" ubuntu@$server_ip 'bash -s ' <<EOF
+  set -e
+  rm -r api/app 2>/dev/null || true
+  unzip app.zip -d api/app
+EOF
+}
+
+script_replace() {
+  ssh -i "$pem_file" ubuntu@$server_ip 'bash -s ' <<EOF
+  set -e
+  d=`date '+%Y-%m-%d_%H-%M-%S'`
+  name="api-backup-\$d"
+  mv api \$name
+  unzip api.zip -d api
+  mv \$name/node_modules api/node_modules
+  cd api
+  yarn
+  screen -X -S api quit 2>/dev/null || true
+  screen -d -m -S api bash -c 'while true; do sudo node index.js >> log.log 2>> err.log; sleep 1; done'
+EOF
+}
+
+script_pack__() {
+  dest="$2"
+  dir="$3"
+  if [ "$1" = "app" ]; then
+    cd app
+    yarn build --dest $dest
+    cd ..
+  fi
+  if [ -d api/$dir ]; then
+    rm -r api/$dir
+  fi
+  cp -r app/$dest api/$dir
+}
+
+script_pack() {
+  if [ -n "${TESTE}" ]; then
+    script_pack__ "" "dist" "app" # no compile, just copy
+    script_pack__ "app" "teste" "teste"
+  else
+    script_pack__ "$1" "dist" "app"
+  fi
+
+  # versão
+  # cat app/package.json | jq .version -r > api/web-version
+  cat app/package.json | grep version | cut -d '"' -f 4 > api/web-version
+
+  cd api
+  mv node_modules ..
+  zip -r -9 api.zip *
+  mv ../node_modules .
+  mv api.zip ..
+  cd ..
+  rm -r api/app
+  if [ -n "${TESTE}" ]; then
+    rm -r api/teste
+  fi
+}
+
+script_pack_app() {
+  cd app
+  yarn build
+  cd dist
+  zip -r -9 app.zip *
+  mv app.zip ../../
+  cd ../../
+}
+
+while [ $# -gt 0 ]; do
+  if [ "$1" = "clear" ]; then
+    for x in "app.zip" "api.zip"; do
+      if [ -f $x ]; then
+        rm $x
+      fi
+    done
+  elif [ "$1" = "app" ]; then
+    script_pack_app
+    script_upload app.zip
+    script_replace_app
+  elif [ "$1" = "pack" ]; then
+    if [ "$2" = "app" ]; then
+      script_pack $2
+      shift
+    else
+      script_pack
+    fi
+  elif [ "$1" = "replace" ]; then
+    script_replace
+  elif [ "$1" = "upload" ]; then
+    script_upload $2
+    shift
+  elif [ "$1" = "connect" ]; then
+    script_connect
+  elif [ "$1" = "download" ]; then
+    script_download $2
+    shift
+  elif [ "$1" = "auto" ]; then
+    echo "kult pack app upload api.zip replace"
+    script_pack app
+    script_upload api.zip
+    script_replace
+  elif [ "$1" = "api" ]; then
+    script_pack
+    script_upload api.zip
+    script_replace
+  elif [ "$1" == "-h" ]; then
+    echo "Commandos: "
+    echo " pack      : Cria o zip do api junto com os arquivos do app/dist"
+    echo " pack app  : Igual a \`pack\`, mas primeiro compila o app"
+    echo " clear     : Apaga app.zip e api.zip"
+    echo " replace   : No servidor, substitui o código atual pelo api.zip que deve estar em ~"
+    echo " connect   : Conecta ao servidor"
+    echo " upload X  : Faz upload de X pro servidor"
+    echo " download X: Faz download de X do servidor"
+  else
+    echo -e "\n\n\nComando desconhecido: $1\n"
+    exit 1
+  fi
+  shift
+done
