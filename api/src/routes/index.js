@@ -7,9 +7,9 @@ router.use(async (request, response, next) => {
         const tokenWithoutPrefix  = (request.headers.authorization || '').slice(7)
         if (!tokenWithoutPrefix) return next()
         
-        const token  = await Token.findOne({value: tokenWithoutPrefix}).populate('user')
+        const token  = await Token.findOne({value: tokenWithoutPrefix})
         if (!token) return next()
-    
+
         const { user } = token
         request.user = user
     

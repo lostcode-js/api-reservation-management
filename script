@@ -18,21 +18,8 @@ script_download() {
   rsync -Phave "ssh -i $pem_file" ubuntu@$server_ip:$1 $1
 }
 
-script_replace_app() {
-  echo "replace_app... "
-  ssh -i "$pem_file" ubuntu@$server_ip 'bash -s ' <<EOF
-  set -e
-  rm -r api/app 2>/dev/null || true
-  unzip app.zip -d api/app
-EOF
-}
-
 script_replace() {
-  echo "replace... "
-  # Conecta-se ao servidor remoto usando SSH
-  # -i "$pem_file": Usa a chave privada especificada em $pem_file para autenticação
-  # ubuntu@$server_ip: Conecta-se como usuário 'ubuntu' no endereço IP especificado
-  # 'bash -s': Inicia um shell Bash no servidor remoto
+  echo "SCRIPT REPLACE INIT... "
   ssh -i "$pem_file" ubuntu@$server_ip 'bash -s ' <<EOF
   set -e
   d=`date '+%Y-%m-%d_%H-%M-%S'`
@@ -43,8 +30,6 @@ script_replace() {
   npm install
   screen -X -S api quit 2>/dev/null || true
   screen -d -m -S api bash -c 'while true; do sudo node index.js >> log.log 2>> err.log; sleep 1; done'
-  screen -X -S app quit 2>/dev/null || true
-  screen -d -m -S app bash -c 'while true; do sudo node app/server/index.mjs >> log.log 2>> err.log; sleep 1; done'
 EOF
 }
 
@@ -52,11 +37,6 @@ script_pack__() {
   echo "START pack__... "
   dest="$2"
   dir="$3"
-  if [ "$1" = "app" ]; then
-    cd app
-    npm run build --dest $dest
-    cd ..
-  fi
   if [ -d api/$dir ]; then
     rm -r api/$dir
   fi
@@ -65,60 +45,25 @@ script_pack__() {
 }
 
 script_pack() {
-  echo "pack... "
-  if [ -n "${TESTE}" ]; then
-    script_pack__ "" ".output" "app" # no compile, just copy
-    script_pack__ "app" "teste" "teste"
-  else
-    script_pack__ "$1" ".output" "app"
-  fi
-
-  # versão
-  # cat app/package.json | jq .version -r > api/web-version
-  cat app/package.json | grep version | cut -d '"' -f 4 > api/web-version
-
+  echo "INIT SCRIPT BACK... "
   cd api
   mv node_modules ..
   zip -r -9 api.zip *
   mv ../node_modules .
   mv api.zip ..
   cd ..
-  rm -r api/app
   if [ -n "${TESTE}" ]; then
     rm -r api/teste
   fi
 }
 
-script_pack_app() {
-  # Muda para o diretório 'app'
-  cd app
-
-  # Executa o script de construção da aplicação usando npm
-  npm run build
-
-  cd .output
-
-  # Cria um arquivo ZIP chamado 'app.zip' contendo todos os arquivos no diretório atual ('*')
-  zip -r -9 app.zip .
-
-  # Move o arquivo ZIP para o diretório pai ('../../')
-  mv app.zip ../../
-
-  # Retorna para o diretório original
-  cd ../../
-}
-
 while [ $# -gt 0 ]; do
   if [ "$1" = "clear" ]; then
-    for x in "app.zip" "api.zip"; do
+    for x in "api.zip"; do
       if [ -f $x ]; then
         rm $x
       fi
     done
-  elif [ "$1" = "app" ]; then
-    script_pack_app
-    script_upload app.zip
-    script_replace_app
   elif [ "$1" = "pack" ]; then
     if [ "$2" = "app" ]; then
       script_pack $2
@@ -137,12 +82,6 @@ while [ $# -gt 0 ]; do
     script_download $2
     shift
   elif [ "$1" = "auto" ]; then
-    echo "script pack app upload api.zip replace"
-
-    echo "INIT script_pack app" 
-    script_pack app
-    echo "END script_pack app"
-
     echo "INIT script_upload api.zip"
     script_upload api.zip
     echo "END script_upload api.zip"
@@ -156,9 +95,8 @@ while [ $# -gt 0 ]; do
     script_replace
   elif [ "$1" == "-h" ]; then
     echo "Commandos: "
-    echo " pack      : Cria o zip do api junto com os arquivos do app/dist"
-    echo " pack app  : Igual a \`pack\`, mas primeiro compila o app"
-    echo " clear     : Apaga app.zip e api.zip"
+    echo " pack      : Cria o zip do api"
+    echo " clear     : Apaga api.zip"
     echo " replace   : No servidor, substitui o código atual pelo api.zip que deve estar em ~"
     echo " connect   : Conecta ao servidor"
     echo " upload X  : Faz upload de X pro servidor"
