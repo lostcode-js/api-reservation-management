@@ -6,12 +6,11 @@ const JWT_SECRET = '0ee4dc1540b617912a23b150eef0a4fe073ca99a'
 
 const getTransport = () => {
     return nodemailer.createTransport({
-        host: process.env.SMTP_HOST ?? 'sandbox.smtp.mailtrap.io',
-        port: process.env.SMTP_PORT ?? 2525,
-        secure: false,
+        host: process.env.SMTP_HOST ?? 'live.smtp.mailtrap.io',
+        port: process.env.SMTP_PORT ?? 587,
         auth: {
-            user: process.env.SMTP_USER ?? '0a76285ac64525',
-            pass: process.env.SMTP_PASSWORD ?? '34d692164befe8',
+            user: process.env.SMTP_USER ?? 'api',
+            pass: process.env.SMTP_PASSWORD ?? '758d9bbb4e57c936b121700144d0f474',
         },
     })
 }
