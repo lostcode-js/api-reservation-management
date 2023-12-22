@@ -1,4 +1,5 @@
-const { Appointment, ObjectId, User, Notification } = require('../database')
+const { Appointment, ObjectId, User, Notification } = require('../database');
+const { doAppointmentEmail } = require('../utils/email.js');
 const { getDefaultDataWhenCreate, getDefaultDataWhenUpdate, getDefaultDataWhenDelete } = require('../utils/util.js')
 
 function formatData(data) {
@@ -82,6 +83,12 @@ exports.post = async (request, response) => {
 
     const users = await User.find({ type: 'admin', deletedAt: null });
 
+    doAppointmentEmail({
+      customer: appointment.customer,
+      email: appointment.employee.email,
+      appointment: `${formatData(appointment.date)} - ${appointment.startTime}`
+    });
+    
     await users.map(async item => {
       const newNotification = new Notification({ user: item._id, message: `Uma reserva foi criada para a data ${formatData(appointment.date)} - ${appointment.startTime}`, createdAt: new Date(), ...value });
 

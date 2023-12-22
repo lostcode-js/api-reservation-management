@@ -36,6 +36,25 @@ const recoveryEmail = (email, token, request) => {
     return message
 }
 
+const doAppointmentEmail = ({email, customer, appointment} ) => {
+
+    const message = {
+        from: '"Drip Br" <noreply@dripbr.pt>',
+        to: email,
+        subject: 'Uma reserva foi criada',
+        text: `
+            Uma reserva foi criada pelo(a) ${customer.email} para
+            ${appointment}
+            Confira no nosso sistema todas as informações.
+            `,
+        html: `
+            <p>Tenha um ótimo dia na Drip Br.</p>
+            `
+    }
+
+    return message
+}
+
 const verificationEmail = (email, token, request) => {
     const url = `https://${request.headers.host}/confirm/${token}`
 
@@ -93,5 +112,6 @@ const verifyEmail = token => {
 
 module.exports = {
     sendVerification, verifyEmail,
-    sendRecovery
+    sendRecovery,
+    doAppointmentEmail
 }
