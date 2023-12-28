@@ -18,7 +18,7 @@ const recoveryEmail = (email, token, request) => {
     const url = `https://${request.headers.host}/password/${token}`
 
     const message = {
-        from: '"Drip Br" <noreply@dripbr.pt>',
+        from: '"Drip Br" <noreply@dripbr.com>',
         to: email,
         subject: 'Recuperação de senha',
         text: `
@@ -39,7 +39,7 @@ const recoveryEmail = (email, token, request) => {
 const doAppointmentEmail = ({email, customer, appointment} ) => {
 
     const message = {
-        from: '"Drip Br" <noreply@dripbr.pt>',
+        from: '"Drip Br" <noreply@dripbr.com>',
         to: email,
         subject: 'Uma reserva foi criada',
         text: `
@@ -59,7 +59,7 @@ const verificationEmail = (email, token, request) => {
     const url = `https://${request.headers.host}/confirm/${token}`
 
     const message = {
-        from: '"Drip Br" <noreply@dripbr.pt>',
+        from: '"Drip Br" <noreply@dripbr.com>',
         to: email,
         subject: 'Confirme o seu email',
         text: `

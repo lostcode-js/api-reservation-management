@@ -32,5 +32,6 @@ router.use('/feedback', require('./feedbackRoute'));
 router.use('/company', require('./companyRoute'));
 router.use('/availability', require('./availabilityRoute'));
 router.use('/appointment', require('./appointmentRoute'));
+router.use('/avatar', require('./avatarRoute'));
 
 module.exports = router;
