@@ -42,7 +42,7 @@ exports.getPaginate = async (request, response) => {
     const totalItems = await Appointment.countDocuments({ ...params, deletedAt: null });
 
     const appointments = await Appointment.find({ ...params, deletedAt: null }).sort(sorted)
-      .skip(skip).populate('services').populate('createdBy').populate('employee').populate('customer');
+      .skip(skip).limit(itemsPerPage).populate('services').populate('createdBy').populate('employee').populate('customer');
 
     response.status(200).json({
       appointments, paginate: {

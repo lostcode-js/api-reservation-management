@@ -8,7 +8,7 @@
     "start": "nodemon index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "danielsoaresf@hotmail.com",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^3.0.1"

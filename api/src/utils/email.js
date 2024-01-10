@@ -10,7 +10,7 @@ const getTransport = () => {
         port: process.env.SMTP_PORT ?? 587,
         auth: {
             user: process.env.SMTP_USER ?? 'api',
-            pass: process.env.SMTP_PASSWORD ?? '758d9bbb4e57c936b121700144d0f474',
+            pass: process.env.SMTP_PASSWORD ?? 'bae8d3bcc5d959dcbe010307dfe9542d',
         },
     })
 }

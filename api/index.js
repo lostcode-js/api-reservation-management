@@ -9,7 +9,7 @@ const port = process.env.APP_PORT ?? '8000';
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
-app.use(express.static('public'));
+app.use('/api/uploads', express.static('public/uploads'));
 
 app.use(cors({
   origin: '*',

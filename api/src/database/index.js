@@ -114,8 +114,8 @@ module.exports = {
                     useNewUrlParser: true,
                     useUnifiedTopology: true
                 }
-                mongoose.connect(`mongodb://${ip}/reservation`, options)
-                //mongoose.connect(process.env.DATABASE_URL, options)
+                
+                //mongoose.connect(`mongodb://${ip}/reservation`, options)
                 console.log('Conexão com Banco de Dados com Sucesso');
                 return resolve();
             } catch (error) {
