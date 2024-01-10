@@ -1,80 +1,168 @@
 const jwt = require('jsonwebtoken')
-const nodemailer = require('nodemailer')
 require('dotenv').config()
+
+const { MailtrapClient } = require("mailtrap");
+
+const TOKEN = "bae8d3bcc5d959dcbe010307dfe9542d";
+const ENDPOINT = "https://send.api.mailtrap.io/";
+const TENANT = "www.dripbr.com";
+
+const client = new MailtrapClient({ endpoint: ENDPOINT, token: TOKEN });
+
+const sender = {
+    email: "noreply@api.dripbr.com",
+    name: "Drip Br",
+};
 
 const JWT_SECRET = '0ee4dc1540b617912a23b150eef0a4fe073ca99a'
 
-const getTransport = () => {
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST ?? 'live.smtp.mailtrap.io',
-        port: process.env.SMTP_PORT ?? 587,
-        auth: {
-            user: process.env.SMTP_USER ?? 'api',
-            pass: process.env.SMTP_PASSWORD ?? 'bae8d3bcc5d959dcbe010307dfe9542d',
-        },
-    })
-}
 const recoveryEmail = (email, token, request) => {
-    const url = `https://${request.headers.host}/password/${token}`
+    const url = `https://${TENANT}/password/${token}`
+    try {
+        const recipients = [
+            {
+                email,
+            }
+        ];
 
-    const message = {
-        from: '"Drip Br" <noreply@dripbr.com>',
-        to: email,
-        subject: 'Recuperação de senha',
-        text: `
-            Obrigado por se registar no Drip Br.
-            Clique no link para recuperar a sua senha.
-            ${url}
-            `,
-        html: `
-            <p>Obrigado por se registar no Drip Br.</p>
-            <p>Clique no link para recuperar a sua senha.</p>
-            <a href="${url}">Recuperar senha</a>
-            `
+        client
+            .send({
+                from: sender,
+                to: recipients,
+                subject: 'DRIP BR - Recuperação de senha',
+                html: `
+                <!doctype html>
+                <html>
+                  <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                  </head>
+                  <body style="font-family: sans-serif;">
+                    <div style="display: block; margin: auto; max-width: 600px; padding: 20px;" class="main">
+                      <h1 style="font-size: 35px; font-weight: bold; margin-top: 20px; margin-bottom: 29px; text-align: center;">Obrigado por se registar no Drip Br.</h1>
+
+                      <hr>
+
+                      <p style="margin-bottom: 8px;">Clique no link para recuperar a sua senha.</p>
+
+                      <div style="padding: 16px 20px; font-size: 16px; font-weight: 600; background-color: #009c3b; color: white; margin-bottom: 8px">
+                        <a href="${url}">RECUPERAR SENHA</a>
+                      </div>
+
+                      <p>Tenha um ótimo dia na Drip Br.</p>
+                    </div>
+                    <style>
+                      .main { background-color: white; }
+                      a:hover { border-left-width: 1em; min-height: 2em; }
+                    </style>
+                  </body>
+                </html>
+                `
+            })
+
+    } catch (error) {
+        console.log(error);
     }
-
-    return message
 }
 
-const doAppointmentEmail = ({email, customer, appointment} ) => {
+const doAppointmentEmail = ({ email, customer, appointment }) => {
+    try {
+        const url = `https://${TENANT}/`
+        const recipients = [
+            {
+                email,
+            }
+        ];
 
-    const message = {
-        from: '"Drip Br" <noreply@dripbr.com>',
-        to: email,
-        subject: 'Uma reserva foi criada',
-        text: `
-            Uma reserva foi criada pelo(a) ${customer.email} para
-            ${appointment}
-            Confira no nosso sistema todas as informações.
-            `,
-        html: `
-            <p>Tenha um ótimo dia na Drip Br.</p>
-            `
+        client
+            .send({
+                from: sender,
+                to: recipients,
+                subject: 'DRIP BR - Uma reserva foi criada',
+                html: `
+                <!doctype html>
+                <html>
+                  <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                  </head>
+                  <body style="font-family: sans-serif;">
+                    <div style="display: block; margin: auto; max-width: 600px; padding: 20px;" class="main">
+                      <h1 style="font-size: 35px; font-weight: bold; margin-top: 20px; margin-bottom: 29px; text-align: center;">Uma reserva foi criada!</h1>
+
+                      <p style="font-size: 18px; text-align: center; margin-bottom: 20px">Olá, Ficamos felizes em informar que uma reserva foi criada pelo(a) ${customer.email} para
+                      ${appointment}.</p>
+
+                      <hr>
+
+                      <p style="margin-bottom: 8px;">Por favor, confira no nosso sistema todas as informações.</p>
+
+                      <div style="padding: 16px 20px; font-size: 16px; font-weight: 600; background-color: #009c3b; color: white; margin-bottom: 8px">
+                        <a href="${url}">VER RESERVA</a>
+                      </div>
+
+                      <p>Tenha um ótimo dia na Drip Br.</p>
+                    </div>
+                    <style>
+                      .main { background-color: white; }
+                      a:hover { border-left-width: 1em; min-height: 2em; }
+                    </style>
+                  </body>
+                </html>
+                `
+            })
+
+    } catch (error) {
+        console.log(error);
     }
 
-    return message
 }
 
 const verificationEmail = (email, token, request) => {
-    const url = `https://${request.headers.host}/confirm/${token}`
+    const url = `https://${TENANT}/confirm/${token}`
 
-    const message = {
-        from: '"Drip Br" <noreply@dripbr.com>',
-        to: email,
-        subject: 'Confirme o seu email',
-        text: `
-            Obrigado por se registar no Drip Br. 
-            Clique no link para confirmar o seu email.
-            ${url}
-            `,
-        html: `
-            <p>Obrigado por se registar no Drip Br.</p>
-            <p>Clique no link para confirmar o seu email.</p>
-            <a href="${url}">Confirmar email</a>
-            `
+    try {
+        const recipients = [
+            {
+                email,
+            }
+        ];
+
+        client
+            .send({
+                from: sender,
+                to: recipients,
+                subject: 'DRIP BR - Confirme o seu email',
+                html: `
+                <!doctype html>
+                <html>
+                  <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                  </head>
+                  <body style="font-family: sans-serif;">
+                    <div style="display: block; margin: auto; max-width: 600px; padding: 20px;" class="main">
+                      <h1 style="font-size: 35px; font-weight: bold; margin-top: 20px; margin-bottom: 29px; text-align: center;">Obrigado por se registar no Drip Br.</h1>
+
+                      <hr>
+
+                      <p style="margin-bottom: 8px;">Clique no link para confirmar o seu email.</p>
+
+                      <div style="padding: 16px 20px; font-size: 16px; font-weight: 600; background-color: #009c3b; color: white; margin-bottom: 8px">
+                        <a href="${url}">CONFIRMAR EMAIL</a>
+                      </div>
+
+                      <p>Tenha um ótimo dia na Drip Br.</p>
+                    </div>
+                    <style>
+                      .main { background-color: white; }
+                      a:hover { border-left-width: 1em; min-height: 2em; }
+                    </style>
+                  </body>
+                </html>
+                `
+            })
+
+    } catch (error) {
+        console.log(error);
     }
-
-    return message
 }
 
 const sendJWTToken = async (email, messageBuilder, request) => {
@@ -87,10 +175,7 @@ const sendJWTToken = async (email, messageBuilder, request) => {
             expiresIn: '1d'
         })
 
-    const message = messageBuilder(email, Buffer.from(token).toString('base64'), request)
-
-    let transporter = getTransport()
-    await transporter.sendMail(message).catch(console.error)
+    messageBuilder(email, Buffer.from(token).toString('base64'), request)
 }
 
 const sendRecovery = (request, email) => {
